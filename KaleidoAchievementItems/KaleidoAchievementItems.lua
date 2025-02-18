@@ -2,14 +2,22 @@ KaleidoAchievementItems = {}
 
 local this = KaleidoAchievementItems
 this.name = "KaleidoAchievementItems"
-this.version = "1.1.0"
+this.version = "1.2.0"
 this.author = "grin3671"
 
 -- this table contains itemsIds (string) and related achievementIds (integer)
 this.addonData = {
-  ---- Elsweyr (already has progress in tooltip)
-  -- ["147929"] = 2519, -- Mummified Alfiq Part
-  -- ["147930"] = 2520, -- Plague-Drenched Fabric
+  ---- Holidays
+  -- ["147658"] = 2464, -- Festive Noise Maker (has progress, 0/10 bugged?)
+  -- ["147659"] = 2465, -- Jester's Festival Joke Popper (has progress)
+  -- ["153535"] = 2591, -- Bare Bones Puppet (has progress)
+  ["199137"] = 3832, -- Haunted By Netches
+  ["204458"] = 3827, -- Jubilee Confetti Conveyor
+  ["212198"] = 4238, -- A Warm Winter Storm
+  ["211128"] = 4226, -- What a Hoot!
+  ---- Elsweyr
+  -- ["147929"] = 2519, -- Mummified Alfiq Part (has progress)
+  -- ["147930"] = 2520, -- Plague-Drenched Fabric (has progress)
   ---- Blackwood
   ["178462"] = 3917, -- Zenithar's Abbey
   ["178463"] = 3916, -- The Silent Halls
@@ -52,7 +60,7 @@ function this:init()
       local bagId, slotIndex = ZO_Inventory_GetBagAndIndex(inventorySlot)
       local itemId = GetItemId(bagId, slotIndex)
       local achievementId = this.addonData[tostring(itemId)]
-      if achievementId ~= nil then
+      if achievementId then
         slotActions:AddCustomSlotAction(SI_DYEING_SWATCH_VIEW_ACHIEVEMENT, function()
           SCENE_MANAGER:HideCurrentScene()
           SYSTEMS:GetObject("achievements"):ShowAchievement(achievementId)
@@ -71,7 +79,7 @@ function this:init()
   local function AddTooltipInfo(control, itemLink)
     local itemId = GetItemLinkItemId(itemLink)
     local achievementId = this.addonData[tostring(itemId)]
-    if achievementId ~= nil then
+    if achievementId then
       -- local name, description, points, icon, completed, date, time = GetAchievementInfo(achievementId)
       local name = GetAchievementInfo(achievementId)
       local criterions = GetAchievementNumCriteria(achievementId)

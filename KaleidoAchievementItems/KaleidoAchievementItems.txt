@@ -1,9 +1,9 @@
-## Title: KaleidoAchievementItems
+## Title: Kaleido Achievement Items
 ## APIVersion: 101044
 ## Description: Adds progress to the tooltip for items required for achievements.
 ## Author: grin3671
-## Version: 1.1.0
-## AddOnVersion: 2
+## Version: 1.2.0
+## AddOnVersion: 3
 ## OptionalDependsOn: LibCustomMenu
 
 KaleidoAchievementItems.lua
