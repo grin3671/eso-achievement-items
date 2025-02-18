@@ -2,7 +2,7 @@ KaleidoAchievementItems = {}
 
 local this = KaleidoAchievementItems
 this.name = "KaleidoAchievementItems"
-this.version = "1.0.0"
+this.version = "1.1.0"
 this.author = "grin3671"
 
 -- this table contains itemsIds (string) and related achievementIds (integer)
@@ -43,6 +43,25 @@ function this:init()
   -- if (LibAddonMenu2) then
   --   self.addonMenu = self:initAddonMenu()
   -- end
+
+  if (LibCustomMenu) then
+    local function AddItem(inventorySlot, slotActions)
+      local valid = ZO_Inventory_GetBagAndIndex(inventorySlot)
+      if not valid then return end
+
+      local bagId, slotIndex = ZO_Inventory_GetBagAndIndex(inventorySlot)
+      local itemId = GetItemId(bagId, slotIndex)
+      local achievementId = this.addonData[tostring(itemId)]
+      if achievementId ~= nil then
+        slotActions:AddCustomSlotAction(SI_DYEING_SWATCH_VIEW_ACHIEVEMENT, function()
+          SCENE_MANAGER:HideCurrentScene()
+          SYSTEMS:GetObject("achievements"):ShowAchievement(achievementId)
+        end , "")
+      end
+    end
+
+    LibCustomMenu:RegisterContextMenu(AddItem, LibCustomMenu.CATEGORY_LATE)
+  end
 
   -- function taken from addon MasterRecipeList with little adjustments
   local function ColorText(color, text)
