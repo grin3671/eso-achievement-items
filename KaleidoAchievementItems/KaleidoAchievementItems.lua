@@ -2,7 +2,7 @@ KaleidoAchievementItems = {}
 
 local this = KaleidoAchievementItems
 this.name = "KaleidoAchievementItems"
-this.version = "1.2.0"
+this.version = "1.3.0"
 this.author = "grin3671"
 
 -- this table contains itemsIds (string) and related achievementIds (integer)
@@ -13,8 +13,8 @@ this.addonData = {
   -- ["153535"] = 2591, -- Bare Bones Puppet (has progress)
   ["199137"] = 3832, -- Haunted By Netches
   ["204458"] = 3827, -- Jubilee Confetti Conveyor
-  ["212198"] = 4238, -- A Warm Winter Storm
   ["211128"] = 4226, -- What a Hoot!
+  ["212198"] = 4238, -- A Warm Winter Storm
   ---- Elsweyr
   -- ["147929"] = 2519, -- Mummified Alfiq Part (has progress)
   -- ["147930"] = 2520, -- Plague-Drenched Fabric (has progress)
@@ -80,20 +80,22 @@ function this:init()
     local itemId = GetItemLinkItemId(itemLink)
     local achievementId = this.addonData[tostring(itemId)]
     if achievementId then
-      -- local name, description, points, icon, completed, date, time = GetAchievementInfo(achievementId)
-      local name = GetAchievementInfo(achievementId)
+      local name, _, _, _, completed = GetAchievementInfo(achievementId)
       local criterions = GetAchievementNumCriteria(achievementId)
+      local r, g, b = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
 
-      control:AddVerticalPadding(10)
-      control:AddLine(name, 'ZoFontHeader2', 1, 1, 1, CENTER, MODIFY_TEXT_TYPE_NONE, CENTER, false)
-      
-      for i=1,GetAchievementNumCriteria(achievementId) do
+      local texts = {}
+      for i = 1, GetAchievementNumCriteria(achievementId) do
         local criterionDesctiprion, criterionNumCompleted, criterionNumRequired = GetAchievementCriterion(achievementId, i)
         local isCriterionComplete = criterionNumCompleted >= criterionNumRequired
-        -- local progressText = zo_strformat(SI_PROMOTIONAL_EVENT_TRACKER_PROGRESS_FORMATTER, criterionNumCompleted, criterionNumRequired)
-        control:AddLine(ColorText("C5C29E", criterionDesctiprion .. ": ") .. ColorText(isCriterionComplete and "2ADC22" or "FFFFFF", criterionNumCompleted) .. ColorText("C5C29E", "/" .. criterionNumRequired), 'ZoFontGame', 1, 1, 1, CENTER, MODIFY_TEXT_TYPE_NONE, CENTER, false)
+        table.insert(texts, criterionDesctiprion .. ": " .. ColorText(isCriterionComplete and "2ADC22" or "FFFFFF", criterionNumCompleted) .. "/" .. criterionNumRequired)
       end
 
+      control:AddVerticalPadding(20)
+      control:AddLine(GetString(SI_GROUPFINDERPLAYSTYLE8), "ZoFontWinH5", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, CENTER, false)
+      control:AddVerticalPadding(-10)
+      control:AddLine(zo_strformat(name), "ZoFontHeader2", 1, 1, 1, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+      control:AddLine(table.concat(texts, "\n"), "", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
     end
   end
 
