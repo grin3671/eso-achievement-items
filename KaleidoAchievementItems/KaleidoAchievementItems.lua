@@ -2,7 +2,7 @@ KaleidoAchievementItems = {}
 
 local this = KaleidoAchievementItems
 this.name = "KaleidoAchievementItems"
-this.version = "1.4.0"
+this.version = "1.4.1"
 this.author = "grin3671"
 
 -- this table contains itemsIds (string) and related achievementIds (integer)
@@ -114,7 +114,7 @@ function this:init()
       callback(control, GetBuybackItemLink(slotIndex))
     end)
     ZO_PostHook(ItemTooltip, "SetTradeItem", function(control, tradeId, slotIndex)
-      callback(control, GetTradeItemLink(slotIndex))
+      callback(control, GetTradeItemLink(tradeId, slotIndex))
     end)
     ZO_PostHook(ItemTooltip, "SetStoreItem", function(control, slotIndex)
       callback(control, GetStoreItemLink(slotIndex))
