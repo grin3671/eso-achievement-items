@@ -2,7 +2,7 @@ KaleidoAchievementItems = {}
 
 local this = KaleidoAchievementItems
 this.name = "KaleidoAchievementItems"
-this.version = "1.4.1"
+this.version = "1.4.2"
 this.author = "grin3671"
 
 -- this table contains itemsIds (string) and related achievementIds (integer)
