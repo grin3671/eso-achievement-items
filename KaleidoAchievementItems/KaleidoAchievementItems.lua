@@ -2,7 +2,7 @@ KaleidoAchievementItems = {}
 
 local this = KaleidoAchievementItems
 this.name = "KaleidoAchievementItems"
-this.version = "1.5.0"
+this.version = "1.5.1"
 this.author = "grin3671"
 
 -- this table contains itemsIds (string) and related achievementIds (integer)
@@ -114,14 +114,7 @@ function this:GetAchievementId(itemId)
     end
 end
 
-
-EVENT_MANAGER:RegisterForEvent(this.name, EVENT_ADD_ON_LOADED, function(event, addonName)
-  if addonName == this.name then
-    this:init()
-  end
-end)
-
-function this:init()
+local function Initialization()
   -- if (LibAddonMenu2) then
   --   self.addonMenu = self:initAddonMenu()
   -- end
@@ -145,41 +138,40 @@ function this:init()
     LibCustomMenu:RegisterContextMenu(AddItem, LibCustomMenu.CATEGORY_LATE)
   end
 
-  -- function taken from addon MasterRecipeList with little adjustments
-  local function ColorText(color, text)
-    return "|c"..tostring(color)..tostring(text).."|r"
+  local function GetAchievementTextInfo(achievementId)
+    local name, _, _, _, completed = GetAchievementInfo(achievementId)
+
+    local texts = {}
+    local isList = false
+    for i = 1, GetAchievementNumCriteria(achievementId) do
+      local criterionDesctiprion, criterionNumCompleted, criterionNumRequired = GetAchievementCriterion(achievementId, i)
+      local isCriterionComplete = criterionNumCompleted >= criterionNumRequired
+
+      isList = criterionNumRequired == 1
+      if isList then
+        table.insert(texts, isCriterionComplete and ZO_TOOLTIP_DEFAULT_COLOR:Colorize(criterionDesctiprion) or ZO_DISABLED_TEXT:Colorize(criterionDesctiprion))
+      else
+        table.insert(texts, zo_strformat("<<1>>: <<2>>/<<3>>", criterionDesctiprion, isCriterionComplete and UNLOCKED_COLOR:Colorize(criterionNumCompleted) or ZO_WHITE:Colorize(criterionNumCompleted), criterionNumRequired))
+      end
+    end
+    texts = isList and ZO_GenerateCommaSeparatedListWithoutAnd(texts) or ZO_GenerateNewlineSeparatedList(texts)
+
+    return name, texts, isList
   end
 
   local function AddTooltipInfo(control, itemLink)
     local itemId = GetItemLinkItemId(itemLink)
     local achievementId = this:GetAchievementId(itemId)
-    if achievementId then
-      local name, _, _, _, completed = GetAchievementInfo(achievementId)
-      local criterions = GetAchievementNumCriteria(achievementId)
-      local r, g, b = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
+    if not achievementId then return end
 
-      local isList = false
-      local texts = {}
-      for i = 1, GetAchievementNumCriteria(achievementId) do
-        local criterionDesctiprion, criterionNumCompleted, criterionNumRequired = GetAchievementCriterion(achievementId, i)
-        local isCriterionComplete = criterionNumCompleted >= criterionNumRequired
+    local name, texts, isList = GetAchievementTextInfo(achievementId)
 
-        isList = criterionNumRequired == 1
-        -- table.insert(texts, criterionDesctiprion .. ": " .. ColorText(isCriterionComplete and "2ADC22" or "FFFFFF", criterionNumCompleted) .. "/" .. criterionNumRequired)
-        if isList then
-          table.insert(texts, ColorText(isCriterionComplete and ZO_TOOLTIP_DEFAULT_COLOR:ToHex() or ZO_DISABLED_TEXT:ToHex(), criterionDesctiprion))
-        else
-          table.insert(texts, criterionDesctiprion .. ": " .. ColorText(isCriterionComplete and UNLOCKED_COLOR:ToHex() or ZO_WHITE:ToHex(), criterionNumCompleted) .. "/" .. criterionNumRequired)
-        end
-      end
-
-      control:AddVerticalPadding(20)
-      control:AddLine(GetString(SI_GROUPFINDERPLAYSTYLE8), "ZoFontWinH5", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, CENTER, false)
-      control:AddVerticalPadding(-10)
-      control:AddLine(zo_strformat(name), "ZoFontHeader2", 1, 1, 1, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
-      -- control:AddLine(table.concat(texts, "\n"), "", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
-      control:AddLine(table.concat(texts, isList and ", " or "\n"), isList and "ZoFontWinH5" or "", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
-    end
+    local r, g, b = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
+    control:AddVerticalPadding(20)
+    control:AddLine(GetString(SI_GROUPFINDERPLAYSTYLE8), "ZoFontWinH5", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, CENTER, false)
+    control:AddVerticalPadding(-10)
+    control:AddLine(zo_strformat(name), "ZoFontHeader2", 1, 1, 1, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+    control:AddLine(texts, isList and "ZoFontWinH5" or "", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
   end
 
   -- function taken from addon MasterRecipeList with little adjustments
@@ -218,3 +210,9 @@ function this:init()
 
   HookItemTooltips(AddTooltipInfo)
 end
+
+EVENT_MANAGER:RegisterForEvent(this.name, EVENT_ADD_ON_LOADED, function(event, addonName)
+  if addonName ~= this.name then return end
+  EVENT_MANAGER:UnregisterForEvent(this.name, EVENT_ADD_ON_LOADED)
+  Initialization()
+end)
