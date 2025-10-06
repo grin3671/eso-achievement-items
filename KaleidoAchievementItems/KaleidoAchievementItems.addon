@@ -2,8 +2,16 @@
 ## APIVersion: 101047
 ## Description: Adds progress to the tooltip for items required for achievements.
 ## Author: grin3671
-## Version: 1.5.1
-## AddOnVersion: 9
+## Version: 1.6.0
+## AddOnVersion: 10
 ## OptionalDependsOn: LibCustomMenu
 
 KaleidoAchievementItems.lua
+
+# This Add-On is not created by, affiliated with or sponsored by ZeniMax
+# Media Inc. or its affiliates. The Elder Scrolls and related logos are
+# registered trademarks or trademarks of ZeniMax Media Inc. in the United
+# States and/or other countries. All rights reserved.
+#
+# You can read the full terms at:
+# https://account.elderscrollsonline.com/add-on-terms

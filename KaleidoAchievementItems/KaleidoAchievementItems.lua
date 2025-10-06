@@ -2,7 +2,7 @@ KaleidoAchievementItems = {}
 
 local this = KaleidoAchievementItems
 this.name = "KaleidoAchievementItems"
-this.version = "1.5.1"
+this.version = "1.6.0"
 this.author = "grin3671"
 
 -- this table contains itemsIds (string) and related achievementIds (integer)
@@ -59,6 +59,8 @@ local AddonData = {
   ["54236"] = 848, -- Oblivion Shard Gatherer
   ["54237"] = 848, -- Oblivion Shard Gatherer
   ["54338"] = 838, -- Tamriel Beast Collector
+  ---- Undaunted Items
+  -- ["167334"] = 2694,
   ---- Holidays
   -- ["147658"] = 2464, -- Festive Noise Maker (has progress, 0/10 bugged?)
   -- ["147659"] = 2465, -- Jester's Festival Joke Popper (has progress)
@@ -90,33 +92,36 @@ local AddonData = {
   ---- Gold Road
   ["207814"] = 4081, -- Silorn
   ["207815"] = 4081, -- Leftwheal Trading Post
-  ["207970"] = { 4055, 4056, 4149 }, -- 10/20/30 Mosaic Skill Shred
   ---- Skill Stylist
+  ["207970"] = { 4055, 4056, 4149 }, -- 10/20/30 Mosaic Skill Shred
   ["214309"] = 4294, -- 10 Harvested Soul Fragments / Soul Trap
-  ---- Solstice
   ["217925"] = 4446, -- 25 Phials of Tainted Blood / Eviscerate
+  ["219782"] = 4447, -- 25 Shards of Writhing Bone / Caltrops
+  ---- Solstice
+  ["219783"] = 4448, -- 25 Writhing Haj Mota Scales
 }
 
-function this:GetAchievementId(itemId)
-    local ID = AddonData[tostring(itemId)]
-    if ID == nil then return end
-    if type(ID) == "table" then
-      local uncomplitedIndex = 1
-      for index, achievementId in ipairs(ID) do
-        local _, _, _, _, completed = GetAchievementInfo(achievementId)
-        if completed then
-          uncomplitedIndex = index + 1
-        end
+function this:GetAchievementId(itemLink)
+  local itemId = GetItemLinkItemId(itemLink)
+  local ID = AddonData[tostring(itemId)]
+  if ID == nil then return end
+  if type(ID) == "table" then
+    local uncomplitedIndex = 1
+    for index, achievementId in ipairs(ID) do
+      local _, _, _, _, completed = GetAchievementInfo(achievementId)
+      if completed then
+        uncomplitedIndex = index + 1
       end
-      return ID[uncomplitedIndex], uncomplitedIndex, #ID
-    else
-      return ID
     end
+    return ID[uncomplitedIndex], uncomplitedIndex, #ID
+  else
+    return ID
+  end
 end
 
 local function Initialization()
   -- if (LibAddonMenu2) then
-  --   self.addonMenu = self:initAddonMenu()
+  --   this.addonMenu = InitializeAddonMenu()
   -- end
 
   if (LibCustomMenu) then
@@ -125,8 +130,8 @@ local function Initialization()
       if not valid then return end
 
       local bagId, slotIndex = ZO_Inventory_GetBagAndIndex(inventorySlot)
-      local itemId = GetItemId(bagId, slotIndex)
-      local achievementId = this:GetAchievementId(itemId)
+      local itemLink = GetItemLink(bagId, slotIndex)
+      local achievementId = this:GetAchievementId(itemLink)
       if achievementId then
         slotActions:AddCustomSlotAction(SI_DYEING_SWATCH_VIEW_ACHIEVEMENT, function()
           SCENE_MANAGER:HideCurrentScene()
@@ -136,6 +141,8 @@ local function Initialization()
     end
 
     LibCustomMenu:RegisterContextMenu(AddItem, LibCustomMenu.CATEGORY_LATE)
+    -- NOTE: The following line should only work with the Gamepad UI due to the lack of a assignment keybind button
+    LibCustomMenu:RegisterKeyStripEnter(AddItem, LibCustomMenu.CATEGORY_LATE)
   end
 
   local function GetAchievementTextInfo(achievementId)
@@ -159,23 +166,52 @@ local function Initialization()
     return name, texts, isList
   end
 
-  local function AddTooltipInfo(control, itemLink)
-    local itemId = GetItemLinkItemId(itemLink)
-    local achievementId = this:GetAchievementId(itemId)
+  local function AddTooltipInfo(control, itemLink, controlType)
+    if not itemLink or itemLink == "" then return end
+    local achievementId = this:GetAchievementId(itemLink)
     if not achievementId then return end
 
     local name, texts, isList = GetAchievementTextInfo(achievementId)
 
-    local r, g, b = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
-    control:AddVerticalPadding(20)
-    control:AddLine(GetString(SI_GROUPFINDERPLAYSTYLE8), "ZoFontWinH5", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, CENTER, false)
-    control:AddVerticalPadding(-10)
-    control:AddLine(zo_strformat(name), "ZoFontHeader2", 1, 1, 1, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
-    control:AddLine(texts, isList and "ZoFontWinH5" or "", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+    if not controlType then
+      -- Keyboard UI
+      local r, g, b = ZO_TOOLTIP_DEFAULT_COLOR:UnpackRGB()
+      control:AddVerticalPadding(20)
+      control:AddLine(GetString(SI_GROUPFINDERPLAYSTYLE8), "ZoFontWinH5", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, CENTER, false)
+      control:AddVerticalPadding(-10)
+      control:AddLine(zo_strformat(name), "ZoFontHeader2", 1, 1, 1, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+      control:AddLine(texts, isList and "ZoFontWinH5" or "", r, g, b, CENTER, MODIFY_TEXT_TYPE_NONE, TEXT_ALIGN_CENTER, true)
+    else
+      -- Gamepad UI
+      control:AddLine(' ') -- vertical paddings
+      control:AddTexture(ZO_GAMEPAD_HEADER_DIVIDER_TEXTURE, control:GetStyle("dividerLine"))
+      control:AddLine(' ')
+      control:AddLine(GetString(SI_GROUPFINDERPLAYSTYLE8), control:GetStyle("statValuePairStat"))
+      control:AddLine(name, control:GetStyle("bodyDescription"), control:GetStyle("whiteFontColor"))
+      control:AddLine(' ')
+      control:AddLine(texts, control:GetStyle("statValuePairStat"), control:GetStyle("mapQuestTitle"))
+      control:AddLine(' ')
+    end
   end
 
-  -- function taken from addon MasterRecipeList with little adjustments
+  -- NOTE: The following function taken from addon IsJusta Gamepad Tamriel Trade Centre Plugin with little adjustments
+  local function IsJustaHook(control, functionName, callbackHook)
+    local originalName = control[functionName]
+    control[functionName] = function(object, tooltipType, ...)
+      control.currentLayoutFunctionName = functionName
+      local originalFunction = originalName(control, tooltipType, ...)
+      local tooltipContainer = control:GetTooltipContainer(tooltipType)
+      if tooltipContainer then
+        local tooltipControl = tooltipContainer:GetNamedChild("TipScrollScrollChildTooltip")
+        callbackHook(tooltipControl, ...)
+      end
+      return originalFunction -- work fine w/o it
+    end
+  end
+
+  -- NOTE: The following function taken from addon MasterRecipeList with little adjustments
   local function HookItemTooltips(callback)
+    -- KEYBOARD UI
     ZO_PostHook(ItemTooltip, "SetBagItem", function(control, bagId, slotIndex)
       callback(control, GetItemLink(bagId, slotIndex))
     end)
@@ -205,6 +241,28 @@ local function Initialization()
     end)
     ZO_PostHook(PopupTooltip, "SetLink", function(control, itemLink)
       callback(control, itemLink)
+    end)
+
+    -- GAMEPAD UI (true added to GP functions to differentiate it in AddTooltipInfo)
+    IsJustaHook(GAMEPAD_TOOLTIPS, "LayoutBagItem", function(control, bagId, slotIndex)
+      callback(control, GetItemLink(bagId, slotIndex), true)
+    end)
+    IsJustaHook(GAMEPAD_TOOLTIPS, "LayoutItem", function(control, itemLink)
+      callback(control, itemLink, true)
+    end)
+    IsJustaHook(GAMEPAD_TOOLTIPS, "LayoutStoreWindowItem", function(control, itemData)
+      -- https://github.com/esoui/esoui/blob/391c25723184ad9fd3fafb13f3adaeb2d3ff8403/esoui/publicallingames/tooltip/itemtooltips.lua#L1595
+      if itemData.itemLink == "" then return end
+      callback(control, itemData.itemLink, true)
+    end)
+    IsJustaHook(GAMEPAD_TOOLTIPS, "LayoutBuyBackItem", function(control, itemIndex)
+      callback(control, GetBuybackItemLink(itemIndex))
+    end)
+    IsJustaHook(GAMEPAD_TOOLTIPS, "LayoutGuildStoreSearchResult", function(control, itemLink)
+      callback(control, itemLink, true)
+    end)
+    IsJustaHook(GAMEPAD_TOOLTIPS, "LayoutItemWithStackCountSimple", function(control, itemLink)
+      callback(control, itemLink, true)
     end)
   end
 
