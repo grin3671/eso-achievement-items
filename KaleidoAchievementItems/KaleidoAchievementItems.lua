@@ -2,10 +2,11 @@ KaleidoAchievementItems = {}
 
 local this = KaleidoAchievementItems
 this.name = "KaleidoAchievementItems"
-this.version = "1.6.0"
+this.version = "1.6.1"
 this.author = "grin3671"
 
--- this table contains itemsIds (string) and related achievementIds (integer)
+-- This table contains itemsIds (string) and related achievementIds (integer) or
+-- listOfAchievementIds (table) with multi-steps achievementIds (integer)
 local AddonData = {
   ---- Trophies
   ["54184"] = 838, -- Tamriel Beast Collector
@@ -99,6 +100,7 @@ local AddonData = {
   ["219782"] = 4447, -- 25 Shards of Writhing Bone / Caltrops
   ---- Solstice
   ["219783"] = 4448, -- 25 Writhing Haj Mota Scales
+  ["223698"] = 4479, -- 25 Worm-Touched Soul Gem // Skill Stylist II: Soul Trap
 }
 
 function this:GetAchievementId(itemLink)
@@ -109,7 +111,7 @@ function this:GetAchievementId(itemLink)
     local uncomplitedIndex = 1
     for index, achievementId in ipairs(ID) do
       local _, _, _, _, completed = GetAchievementInfo(achievementId)
-      if completed then
+      if completed and #ID > uncomplitedIndex then
         uncomplitedIndex = index + 1
       end
     end
